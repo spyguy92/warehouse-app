@@ -1,0 +1,42 @@
+stages:
+  - lint
+  - test
+  - build
+  - deploy
+
+lint:
+  stage: lint
+  image: node:18
+  script:
+    - cd backend && npm install && npm run lint
+    - cd frontend && npm install && npm run lint
+
+test:
+  stage: test
+  image: node:18
+  script:
+    - cd backend && npm install && npm run test
+    - cd frontend && npm install && npm run test
+
+build:
+  stage: build
+  image: docker:20.10
+  services:
+    - docker:dind
+  script:
+    - docker-compose build
+  artifacts:
+    paths:
+      - backend/dist
+      - frontend/build
+
+deploy:
+  stage: deploy
+  image: docker:20.10
+  services:
+    - docker:dind
+  script:
+    - docker-compose up -d
+    - ssh user@server "cd /path/to/project && docker-compose pull && docker-compose up -d"
+  only:
+    - main
